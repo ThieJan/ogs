@@ -186,7 +186,10 @@ public:
         {
             return setSigma(values);
         }
-
+        if (name == "epsilon_ip")
+        {
+            return setEpsilon(values);
+        }
         return 0;
     }
 
@@ -430,6 +433,33 @@ private:
 
         return n_integration_points;
     }
+    
+    std::size_t setEpsilon(double const* values)
+    {
+        auto const kelvin_vector_size =
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value;
+        unsigned const n_integration_points =
+            _integration_method.getNumberOfPoints();
+
+//        std::vector<double> ip_sigma_values;
+        auto epsilon_values =
+            Eigen::Map<Eigen::Matrix<double, kelvin_vector_size, Eigen::Dynamic,
+                                     Eigen::ColMajor> const>(
+                values, kelvin_vector_size, n_integration_points);
+
+        for (unsigned ip = 0; ip < n_integration_points; ++ip)
+        {
+            _ip_data[ip].eps =
+                MathLib::KelvinVector::symmetricTensorToKelvinVector(
+                    epsilon_values.col(ip));
+            _ip_data[ip].eps_m =
+                MathLib::KelvinVector::symmetricTensorToKelvinVector(
+                    epsilon_values.col(ip));
+        }
+
+        return n_integration_points;
+    }
 
     // TODO (naumov) This method is same as getIntPtSigma but for arguments and
     // the ordering of the cache_mat.
@@ -455,6 +485,34 @@ private:
         }
 
         return ip_sigma_values;
+    }
+    
+    
+
+    // TODO (naumov) This method is same as getIntPtEpsilon but for arguments and
+    // the ordering of the cache_mat.
+    // There should be only one.
+    std::vector<double> getEpsilon() const override
+    {
+        auto const kelvin_vector_size =
+            MathLib::KelvinVector::KelvinVectorDimensions<
+                DisplacementDim>::value;
+        unsigned const n_integration_points =
+            _integration_method.getNumberOfPoints();
+
+        std::vector<double> ip_epsilon_values;
+        auto cache_mat = MathLib::createZeroedMatrix<Eigen::Matrix<
+            double, Eigen::Dynamic, kelvin_vector_size, Eigen::RowMajor>>(
+            ip_epsilon_values, n_integration_points, kelvin_vector_size);
+
+        for (unsigned ip = 0; ip < n_integration_points; ++ip)
+        {
+            auto const& epsilon = _ip_data[ip].eps;
+            cache_mat.row(ip) =
+                MathLib::KelvinVector::kelvinVectorToSymmetricTensor(epsilon);
+        }
+
+        return ip_epsilon_values;
     }
 
     std::vector<double> const& getIntPtSigma(
