@@ -146,9 +146,9 @@ calculatePlasticResidual(
     double const d_eps_V,
     PhysicalStressWithInvariants<DisplacementDim> const& s,
     typename SolidEhlers<DisplacementDim>::KelvinVector const& sigma_prev,
-    MathLib::KelvinVector::KelvinVectorType<DisplacementDim> const& eps_p_D,
+    MathLib::KelvinVector::KelvinVectorType<DisplacementDim> const& d_eps_p_D,
     MathLib::KelvinVector::KelvinVectorType<DisplacementDim> const& eps_p_D_dot,
-    double const eps_p_V,
+    double const d_eps_p_V,
     double const eps_p_V_dot,
     double const eps_p_eff_dot,
     double const lambda,
@@ -169,8 +169,8 @@ calculatePlasticResidual(
     typename SolidEhlers<DisplacementDim>::ResidualVectorType residual;
     // calculate stress residual
     residual.template segment<KelvinVectorSize>(0).noalias() =
-        (s.value-sigma_prev) / mp.G - 2 * (d_eps_D - eps_p_D) -
-        mp.K / mp.G * (d_eps_V - eps_p_V) * identity2;
+        (s.value-sigma_prev) / mp.G - 2 * (d_eps_D - d_eps_p_D) -
+        mp.K / mp.G * (d_eps_V - d_eps_p_V) * identity2;
 
     // deviatoric plastic strain
     KelvinVector const sigma_D_inverse_D =
@@ -553,15 +553,15 @@ SolidEhlers<DisplacementDim>::integrateStress(
             
             auto const update_residual = [&](ResidualVectorType& residual) {
 
-                auto const& eps_p_D =
+                auto const& d_eps_p_D =
                     solution.template segment<KelvinVectorSize>(
-                        KelvinVectorSize);
-                KelvinVector const eps_p_D_dot =
-                    (eps_p_D - state.eps_p_prev.D) / dt;
+                        KelvinVectorSize)
+                    - state.eps_p_prev.D;
+                KelvinVector const eps_p_D_dot = d_eps_p_D / dt;
 
-                double const& eps_p_V = solution[KelvinVectorSize * 2];
-                double const eps_p_V_dot =
-                    (eps_p_V - state.eps_p_prev.V) / dt;
+                double const& d_eps_p_V =
+                    solution[KelvinVectorSize * 2]-state.eps_p_prev.V;
+                double const eps_p_V_dot = d_eps_p_V / dt;
 
                 double const& eps_p_eff = solution[KelvinVectorSize * 2 + 1];
                 double const eps_p_eff_dot =
@@ -569,12 +569,11 @@ SolidEhlers<DisplacementDim>::integrateStress(
 
                 double const k_hardening = calculateIsotropicHardening(
                     mp.kappa, mp.hardening_coefficient,
-                    solution[KelvinVectorSize * 2 + 1]);
+                    eps_p_eff);
                 residual = calculatePlasticResidual<DisplacementDim>(
                     d_eps_D, d_eps_V, s,sigma_prev,
-                    solution.template segment<KelvinVectorSize>(
-                        KelvinVectorSize),
-                    eps_p_D_dot, solution[KelvinVectorSize * 2], eps_p_V_dot,
+                    d_eps_p_D, eps_p_D_dot,
+                    d_eps_p_V, eps_p_V_dot,
                     eps_p_eff_dot, solution[KelvinVectorSize * 2 + 2],
                     k_hardening, mp);
             };
