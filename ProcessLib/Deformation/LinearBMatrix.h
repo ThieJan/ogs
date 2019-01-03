@@ -80,5 +80,46 @@ BMatrixType computeBMatrix(DNDX_Type const& dNdx,
 
     return B;
 }
+
+/// Fills a B-matrix correction based on given shape function dN/dx values.
+template <int DisplacementDim,
+          int NPOINTS,
+          typename BMatrixType,
+          typename DNDX_Type>
+BMatrixType computeMatrixCorrection(DNDX_Type const& dNdx,
+                                    DNDX_Type const& dN_centerdx,
+                                    const double /*radius*/,
+                                    const bool /*is_axially_symmetric*/)
+{
+    static_assert(0 < DisplacementDim && DisplacementDim <= 3,
+                  "LinearBMatrix::computeMatrixCorrection: DisplacementDim must be in "
+                  "range [1,3].");
+
+    BMatrixType B = BMatrixType::Zero(
+        MathLib::KelvinVector::KelvinVectorDimensions<DisplacementDim>::value,
+        NPOINTS * DisplacementDim);
+
+    switch (DisplacementDim)
+    {
+        case 3:
+            for ( int dim = 0; dim < 3; ++dim )
+            {
+                for (int i = 0; i < NPOINTS; ++i)
+                {
+                    B(0, dim * NPOINTS + i) = (dN_centerdx(dim,i)-dNdx(dim, i))/3.0;
+                    B(1, dim * NPOINTS + i) = (dN_centerdx(dim,i)-dNdx(dim, i))/3.0;
+                    B(2, dim * NPOINTS + i) = (dN_centerdx(dim,i)-dNdx(dim, i))/3.0;
+                }
+            }
+            break;
+        case 2:
+            OGS_FATAL("Bulkstrain correction not implemented/tested for dimension 2!");
+            break;
+        default:
+            break;
+    }
+
+    return B;
+}
 }  // namespace LinearBMatrix
 }  // namespace ProcessLib

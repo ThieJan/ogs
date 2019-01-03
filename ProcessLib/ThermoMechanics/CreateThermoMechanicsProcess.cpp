@@ -36,7 +36,7 @@ std::unique_ptr<Process> createThermoMechanicsProcess(
     config.checkConfigParameter("type", "THERMO_MECHANICS");
     DBUG("Create ThermoMechanicsProcess.");
 
-     auto const staggered_scheme =
+    auto const staggered_scheme =
         //! \ogs_file_param{prj__processes__process__THERMO_MECHANICS__coupling_scheme}
         config.getConfigParameterOptional<std::string>("coupling_scheme");
     const bool use_monolithic_scheme =
@@ -152,12 +152,19 @@ std::unique_ptr<Process> createThermoMechanicsProcess(
 
         std::copy_n(b.data(), b.size(), specific_body_force.data());
     }
-
+    
+    auto& use_bulkstrain = findParameter<double>(
+        config,
+        //! \ogs_file_param{prj__processes__process__THERMO_MECHANICS__use_bulkstrain}
+        "use_bulkstrain", parameters, 1);
+    DBUG("Use parameter '%s' as bulkstrain indicator.",
+         use_bulkstrain.name.c_str());
+        
     ThermoMechanicsProcessData<DisplacementDim> process_data{
         materialIDs(mesh),       std::move(solid_constitutive_relations),
         reference_solid_density, linear_thermal_expansion_coefficient,
         specific_heat_capacity,  thermal_conductivity,
-        specific_body_force};
+        specific_body_force,     use_bulkstrain};
 
     SecondaryVariableCollection secondary_variables;
 

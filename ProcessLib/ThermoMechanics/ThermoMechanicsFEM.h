@@ -135,7 +135,10 @@ public:
                 _process_data.solid_materials,
                 _process_data.material_ids,
                 e.getID());
-
+        
+        SpatialPosition x_position;
+        x_position.setElementID(_element.getID());
+        
         for (unsigned ip = 0; ip < n_integration_points; ip++)
         {
             _ip_data.emplace_back(solid_material);
@@ -154,8 +157,6 @@ public:
             ip_data.eps_m.setZero(kelvin_vector_size);
             ip_data.eps_m_prev.setZero(kelvin_vector_size);
 
-            SpatialPosition x_position;
-            x_position.setElementID(_element.getID());
             ip_data.solid_density =
                 _process_data.reference_solid_density(0, x_position)[0];
             ip_data.solid_density_prev = ip_data.solid_density;
@@ -164,6 +165,21 @@ public:
             ip_data.dNdx = shape_matrices[ip].dNdx;
 
             _secondary_data.N[ip] = shape_matrices[ip].N;
+        }
+        assert(!_process_data.use_bulkstrain.isTimeDependent());
+        if (_process_data.use_bulkstrain(0,x_position)[0])
+        {
+            //assertions
+            if (e.getCellType()!=MeshLib::CellType::HEX8)
+                OGS_FATAL("Bulkstrain only implemented for Hex8 Elements");
+            if (integration_order!=2)
+                OGS_FATAL("Bulkstrain only implemented for integration order 1");                    
+                    
+            auto const shape_matrices =
+            initShapeMatrices<ShapeFunction, ShapeMatricesType,
+                              IntegrationMethod, DisplacementDim>(
+                e, is_axially_symmetric, IntegrationMethod(1));
+            _dN_centerdx = shape_matrices[0].dNdx;
         }
     }
 
@@ -259,10 +275,15 @@ public:
             auto const x_coord =
                 interpolateXCoordinate<ShapeFunction, ShapeMatricesType>(
                     _element, N);
-            auto const& B = LinearBMatrix::computeBMatrix<
+            auto B = LinearBMatrix::computeBMatrix<
                 DisplacementDim, ShapeFunction::NPOINTS,
                 typename BMatricesType::BMatrixType>(dNdx, N, x_coord,
                                                      _is_axially_symmetric);
+            if (_process_data.use_bulkstrain(t,x_position)[0])
+                B+= LinearBMatrix::computeMatrixCorrection<
+                    DisplacementDim, ShapeFunction::NPOINTS,
+                    typename BMatricesType::BMatrixType>(dNdx,_dN_centerdx,x_coord,
+                                                         _is_axially_symmetric);
 
             auto& sigma = _ip_data[ip].sigma;
             auto const& sigma_prev = _ip_data[ip].sigma_prev;
@@ -524,6 +545,8 @@ private:
     SecondaryData<typename ShapeMatrices::ShapeType> _secondary_data;
     bool const _is_axially_symmetric;
 
+    typename ShapeMatricesType::GlobalDimNodalMatrixType _dN_centerdx;
+    
     static const int temperature_index = 0;
     static const int temperature_size = ShapeFunction::NPOINTS;
     static const int displacement_index = ShapeFunction::NPOINTS;
