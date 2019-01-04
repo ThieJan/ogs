@@ -27,6 +27,7 @@ struct ThermoMechanicsLocalAssemblerInterface
         int const integration_order) = 0;
 
     virtual std::vector<double> getSigma() const = 0;
+    virtual std::vector<double> getEpsilon() const = 0;
 
     virtual std::vector<double> const& getIntPtSigma(
         const double /*t*/,
