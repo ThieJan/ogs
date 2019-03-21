@@ -51,7 +51,7 @@
         </processes>
         <output>
             <type>VTK</type>
-            <prefix>cube_1e0_orthotropic</prefix>
+            <prefix>cube_1e0_zxy_orthotropic</prefix>
             <timesteps>
                 <pair>
                     <repeat>1</repeat>
@@ -66,9 +66,9 @@
         </output>
     </time_loop>
     <local_coordinate_system>
-        <basis_vector_0>e0</basis_vector_0>
-        <basis_vector_1>e1</basis_vector_1>
-        <basis_vector_2>e2</basis_vector_2>
+        <basis_vector_0>e2</basis_vector_0>
+        <basis_vector_1>e0</basis_vector_1>
+        <basis_vector_2>e1</basis_vector_2>
     </local_coordinate_system>
     <parameters>
         <parameter>
@@ -89,7 +89,7 @@
         <parameter>
             <name>E</name>
             <type>Constant</type>
-            <values>1 1 0.5</values>
+            <values>0.5 1 1</values>
         </parameter>
         <parameter>
             <name>G</name>
@@ -99,7 +99,7 @@
         <parameter>
             <name>nu</name>
             <type>Constant</type>
-            <values>.2 .3 .4</values>
+            <values>.2 .2 .15</values>
         </parameter>
         <parameter>
             <name>rho_sr</name>
@@ -112,19 +112,9 @@
             <values>0 0 0</values>
         </parameter>
         <parameter>
-            <name>Dirichlet_left</name>
+            <name>dirichlet0</name>
             <type>Constant</type>
-            <value>0.</value>
-        </parameter>
-        <parameter>
-            <name>Dirichlet_bottom</name>
-            <type>Constant</type>
-            <value>0.</value>
-        </parameter>
-        <parameter>
-            <name>Dirichlet_front</name>
-            <type>Constant</type>
-            <value>0.</value>
+            <value>0</value>
         </parameter>
         <parameter>
             <name>Neumann_force_top</name>
@@ -145,21 +135,21 @@
                     <geometry>left</geometry>
                     <type>Dirichlet</type>
                     <component>0</component>
-                    <parameter>Dirichlet_left</parameter>
+                    <parameter>dirichlet0</parameter>
                 </boundary_condition>
                 <boundary_condition>
                     <geometrical_set>cube_1x1x1_geometry</geometrical_set>
                     <geometry>front</geometry>
                     <type>Dirichlet</type>
                     <component>1</component>
-                    <parameter>Dirichlet_front</parameter>
+                    <parameter>dirichlet0</parameter>
                 </boundary_condition>
                 <boundary_condition>
                     <geometrical_set>cube_1x1x1_geometry</geometrical_set>
                     <geometry>bottom</geometry>
                     <type>Dirichlet</type>
                     <component>2</component>
-                    <parameter>Dirichlet_bottom</parameter>
+                    <parameter>dirichlet0</parameter>
                 </boundary_condition>
                 <boundary_condition>
                     <geometrical_set>cube_1x1x1_geometry</geometrical_set>
@@ -197,25 +187,25 @@
     </linear_solvers>
     <test_definition>
         <vtkdiff>
-            <file>cube_1e0_orthotropic_pcs_0_ts_4_t_1.000000.vtu</file>
+            <file>cube_1e0_zxy_orthotropic_pcs_0_ts_4_t_1.000000.vtu</file>
             <field>displacement</field>
             <absolute_tolerance>1e-14</absolute_tolerance>
             <relative_tolerance>1e-15</relative_tolerance>
         </vtkdiff>
         <vtkdiff>
-            <file>cube_1e0_orthotropic_pcs_0_ts_4_t_1.000000.vtu</file>
+            <file>cube_1e0_zxy_orthotropic_pcs_0_ts_4_t_1.000000.vtu</file>
             <field>NodalForces</field>
             <absolute_tolerance>1e-14</absolute_tolerance>
             <relative_tolerance>1e-15</relative_tolerance>
         </vtkdiff>
         <vtkdiff>
-            <file>cube_1e0_orthotropic_pcs_0_ts_4_t_1.000000.vtu</file>
+            <file>cube_1e0_zxy_orthotropic_pcs_0_ts_4_t_1.000000.vtu</file>
             <field>sigma</field>
             <absolute_tolerance>1e-14</absolute_tolerance>
             <relative_tolerance>1e-15</relative_tolerance>
         </vtkdiff>
         <vtkdiff>
-            <file>cube_1e0_orthotropic_pcs_0_ts_4_t_1.000000.vtu</file>
+            <file>cube_1e0_zxy_orthotropic_pcs_0_ts_4_t_1.000000.vtu</file>
             <field>epsilon</field>
             <absolute_tolerance>1e-14</absolute_tolerance>
             <relative_tolerance>1e-15</relative_tolerance>
