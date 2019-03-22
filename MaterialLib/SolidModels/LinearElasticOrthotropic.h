@@ -195,24 +195,20 @@ public:
     MaterialProperties getMaterialProperties() const { return _mp; }
 
 private:
-    /// Rotation matrix of a forth order tensor. The matrix is symmetric.
-    KelvinMatrix fourthOrderRotationMatrix(
+    /// Rotation matrix of a forth order tensor in 3D.
+    MathLib::KelvinVector::KelvinMatrixType<3> fourthOrderRotationMatrix(
         ParameterLib::SpatialPosition const& x) const
     {
         if (!_local_coordinate_system)
         {
-            return KelvinMatrix::Identity();
+            return MathLib::KelvinVector::KelvinMatrixType<3>::Identity();
         }
 
-        if (DisplacementDim != 3)
-        {
-            OGS_FATAL("2D case of orthotropic elasticity is not implemented.");
-        }
         // 1-based index access for convenience.
         auto Q = [R = _local_coordinate_system->transformation<3>(x)](
                      int const i, int const j) { return R(i - 1, j - 1); };
 
-        KelvinMatrix R;
+        MathLib::KelvinVector::KelvinMatrixType<3> R;
         R << Q(1, 1) * Q(1, 1), Q(1, 2) * Q(1, 2), Q(1, 3) * Q(1, 3),
             std::sqrt(2) * Q(1, 1) * Q(1, 2), std::sqrt(2) * Q(1, 2) * Q(1, 3),
             std::sqrt(2) * Q(1, 1) * Q(1, 3), Q(2, 1) * Q(2, 1),
